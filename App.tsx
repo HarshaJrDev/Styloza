@@ -1,118 +1,98 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import {ActivityIndicator, StyleSheet, View} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import Home from './screens/Home';
+import OnBoarding from './screens/OnBoarding';
+import Signup from './Auth/Signup';
+import Signin from './Auth/Signin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Button, Provider as PaperProvider } from 'react-native-paper';
+import auth from '@react-native-firebase/auth';  // Import Firebase auth
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const HomeStack = createNativeStackNavigator();
+const AuthStack = createNativeStackNavigator();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const App = () => {
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  const [isLogin, setIsLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+  useEffect(() => {
+    const checkLoginCredentials = async () => {
+      try {
+        const token = await AsyncStorage.getItem('usertoken');
+        setIsLogin(Boolean(token));
+      } catch (error) {
+        console.error('Error checking login credentials:', error);
+        setIsLogin(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    checkLoginCredentials();
+  }, []);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  // Handle sign-out
+  const signOut = async () => {
+    try {
+      await auth().signOut();
+      await AsyncStorage.removeItem('usertoken');
+      setIsLogin(false);
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
   };
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4756ca" />
+      </View>
+    );
+  }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+  const AuthScreen = () => (
+    <AuthStack.Navigator initialRouteName='OnBoarding'>
+      <AuthStack.Screen name="Signin" component={Signin} options={{headerShown: false}}/>
+      <AuthStack.Screen name="Home" component={Home} options={{headerShown: false}}/>
+      <AuthStack.Screen name="Signup" component={Signup} options={{headerShown: false}}/>
+      <AuthStack.Screen name="OnBoarding" component={OnBoarding} options={{headerShown: false}}/>
+    </AuthStack.Navigator>
+  );
+
+  const HomeScreen = () => (
+    <HomeStack.Navigator>
+      <HomeStack.Screen
+        name="Home"
+        component={Home}
+        options={{
+          headerShown: false,
+          headerRight: () => (
+            <Button onPress={signOut} title="Sign Out" color="#0088D1" />
+          ),
+        }}
+      />
+    </HomeStack.Navigator>
+  );
+
+  return (
+    <PaperProvider>
+      <NavigationContainer>
+        {isLogin ? <HomeScreen /> : <AuthScreen />}
+      </NavigationContainer>
+    </PaperProvider>
+  );
+};
 
 export default App;
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+});

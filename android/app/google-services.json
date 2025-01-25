@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "506283884120",
+    "project_id": "styloza-ec15a",
+    "storage_bucket": "styloza-ec15a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506283884120:android:c8e038238bdae1a333942d",
+        "android_client_info": {
+          "package_name": "com.styloza"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAw90t3974VT1TONPJgGlX99-FvHF616g0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
